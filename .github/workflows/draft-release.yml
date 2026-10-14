@@ -31,6 +31,12 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      # desktop-file-validate, which verify-linux-package.mjs runs against the
+      # generated .desktop entry, is not preinstalled on the runner.
+      - name: Install package tools
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          desktop-file-utils squashfs-tools x11-utils
       - run: pnpm install --frozen-lockfile
       - name: Build and package (the .deb pipeline, AppImage included)
         run: pnpm package:linux
