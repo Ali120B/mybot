@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    # Tag pushes are releases in this fork (draft-release.yml owns them),
-    # and this repository has no Docker Hub credentials to push with.
+    # No tags here: tag pushes are releases in this fork and draft-release.yml
+    # owns them (upstream's release.yml used to dispatch this on the tag).
     paths:
       - Dockerfile
       - .dockerignore
@@ -53,9 +53,10 @@ jobs:
       - name: Prove the image finds its enterprise layer
         # The image ships dist-server/ alone, so the bundled layer sits inside
         # the server root (server/enterprise.ts looks there after the sibling
-        # folder). A key that is not genuine proves the layer loaded and
-        # checked it; a missing layer would report "no enterprise layer exists"
-        # and a licensed self-hoster would silently run the open-source edition.
+        # folder). This fork ships enterprise/LICENSE with the tree, so even
+        # against a bogus OMB_LICENSE_KEY the layer must load and serve the
+        # everyone edition; a missing layer would report "no enterprise layer
+        # exists" and a self-hoster would silently run the open-source edition.
         run: |
           set -euo pipefail
           docker run -d --name omb-ent -e OMB_LICENSE_KEY=omb1.not.real openmausbot:ci
@@ -67,8 +68,7 @@ jobs:
           edition=$(docker exec omb-ent curl -sf http://127.0.0.1:8799/api/edition)
           echo "$edition"
           if grep -q 'no enterprise layer exists' <<<"$edition"; then echo "the image cannot find its enterprise layer"; exit 1; fi
-          grep -q '"edition":"oss"' <<<"$edition"
-          grep -q 'enterprise layer disabled: OMB_LICENSE_KEY signature does not match' <<<"$edition"
+          grep -q '"customer":"everyone"' <<<"$edition"
           docker exec omb-ent test -f /app/dist-server/enterprise/LICENSE
           docker rm -f omb-ent >/dev/null
       - name: Prove the non-root user can browse with the baked-in Chrome

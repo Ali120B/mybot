@@ -433,10 +433,17 @@ const fields = execFileSync(
   ["--field", deb, "Package", "Version", "Architecture", "Maintainer", "Section", "Priority"],
   { encoding: "utf8" },
 );
+// The .deb maintainer is whatever electron-builder.yml declares; keep the
+// check tied to that file instead of a name that belongs to another repo.
+const maintainer =
+  /^\s*maintainer:\s*(.+)$/m.exec(
+    readFileSync(path.join(root, "electron-builder.yml"), "utf8"),
+  )?.[1]?.trim() ?? "";
+if (!maintainer) fail("electron-builder.yml has no linux.deb maintainer");
 for (const expected of [
   "Package: openmausbot",
   "Architecture: amd64",
-  "Maintainer: Milind Soni",
+  `Maintainer: ${maintainer}`,
   "Section: utils",
   "Priority: optional",
 ]) {
