@@ -1,0 +1,87 @@
+# A tag push (v*, created by `pnpm run publish`) builds the Ubuntu pair —
+# the same .deb + AppImage pipeline Package Ubuntu runs — and attaches both
+# to a DRAFT release for that tag. Nothing goes public by itself: open the
+# draft, download the files from it, and publish the release from GitHub's
+# Releases page when it looks right.
+name: Draft release (Ubuntu)
+
+on:
+  push:
+    tags: ["v*"]
+
+# create the draft and upload its assets
+permissions:
+  contents: write
+
+concurrency:
+  group: draft-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: DEB + AppImage → draft release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build and package (the .deb pipeline, AppImage included)
+        run: pnpm package:linux
+      - name: Verify package contents and metadata
+        run: node scripts/verify-linux-package.mjs
+      - name: Prepare release assets
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          appimage="release/OpenMausBot-${version}-x86_64.AppImage"
+          deb="release/OpenMausBot-${version}-amd64.deb"
+          test -f "$appimage"
+          test -f "$deb"
+          cp "$appimage" release/OpenMausBot.AppImage
+          cp "$deb" release/OpenMausBot-amd64.deb
+          chmod 0755 release/OpenMausBot.AppImage
+          (
+            cd release
+            sha256sum \
+              "$(basename "$appimage")" \
+              "$(basename "$deb")" \
+              OpenMausBot.AppImage \
+              OpenMausBot-amd64.deb > SHA256SUMS-ubuntu-x64.txt
+          )
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "commit: $(git rev-parse HEAD)"
+          cat release/SHA256SUMS-ubuntu-x64.txt
+      - name: Attach everything to the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.release.outputs.version }}"
+          tag="$GITHUB_REF_NAME"
+          files=(
+            "release/OpenMausBot-${version}-x86_64.AppImage"
+            "release/OpenMausBot-${version}-amd64.deb"
+            release/OpenMausBot.AppImage
+            release/OpenMausBot-amd64.deb
+            release/SHA256SUMS-ubuntu-x64.txt
+          )
+          # what electron-updater reads once the draft is published
+          if [ -f release/latest-linux.yml ]; then files+=(release/latest-linux.yml); fi
+          # gh release view finds drafts too, so a rerun never opens a second one
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft \
+              --title "$tag" --generate-notes --verify-tag
+          fi
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber "${files[@]}"
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,url --jq '"::notice title=Draft release::draft=\(.isDraft) \(.url)"'

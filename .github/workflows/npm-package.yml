@@ -3,9 +3,11 @@ name: npm package
 on:
   # release.yml dispatches this on the tag it just published: a tag created
   # with the workflow token never fires push events on its own.
+  # No `push: tags` trigger here: releases in this fork are tag-pushed by
+  # `pnpm run publish` and handled by draft-release.yml. npm's trusted
+  # publishing (OIDC) is registered for the upstream owner/repo, so a
+  # publish from this repository would only fail after building.
   workflow_dispatch:
-  push:
-    tags: ["v*"]
   pull_request:
     paths:
       - server/cli.ts

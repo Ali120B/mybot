@@ -1,5 +1,26 @@
 # Releasing
 
+## This fork
+
+Publishing here is one command:
+
+1. Bump `"version"` in `package.json` if this is a new release, commit it,
+   and push `main`.
+2. Run **`pnpm run publish`** — it tags `v<version>` and pushes the tag
+   (`pnpm run publish -- --dry-run` only prints what would happen).
+3. The **Draft release (Ubuntu)** workflow builds the `.deb` and the
+   AppImage on CI and attaches both, `SHA256SUMS-ubuntu-x64.txt` and
+   `latest-linux.yml` to a **draft** release. Download the files from the
+   draft at [releases](https://github.com/Ali120B/mybot/releases), and
+   publish it from GitHub's Releases page when it looks right — publishing
+   is also what makes the app's auto-updater see the release.
+
+Everything below is the upstream project's original multi-platform process
+(macOS signing, Windows installers, the legacy mirror bridge). It needs
+credentials this fork does not have; the workflows are still in
+`.github/workflows/` for reference and can be run by hand with
+**Run workflow**.
+
 For a normal release, run **Actions → Prepare next release → Run workflow** and
 choose a patch, minor, or custom version. It opens a tiny version-bump PR;
 merging that PR automatically starts **Release** and assembles a draft from the
@@ -10,7 +31,7 @@ reruns and recovery. It
 builds macOS (arm64 + x64, signed, notarized, stapled), Windows, and Ubuntu
 from a single pinned commit, verifies every artifact the way a user would
 receive it, and assembles the canonical draft in
-[OpenMausBot releases](https://github.com/milind-soni/OpenMausBot/releases).
+[OpenMausBot releases](https://github.com/Ali120B/mybot/releases).
 The exact same assets are also staged in the public legacy releases repo so
 installed builds from 0.1.46 and earlier can update across the repository
 migration.

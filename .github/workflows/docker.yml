@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags: ["v*"]
+    # Tag pushes are releases in this fork (draft-release.yml owns them),
+    # and this repository has no Docker Hub credentials to push with.
     paths:
       - Dockerfile
       - .dockerignore

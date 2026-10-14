@@ -1,8 +1,9 @@
 name: Sync published release
 
 on:
-  release:
-    types: [published]
+  # This fork has no legacy mirror to sync a published release into — that
+  # bridge targets the upstream repositories and their credentials — so the
+  # release-published trigger is off. Manual dispatch remains for reference.
   workflow_dispatch:
     inputs:
       tag:

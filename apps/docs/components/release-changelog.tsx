@@ -129,7 +129,7 @@ export async function ReleaseChangelog() {
     return (
       <p>
         The live release history is temporarily unavailable.{' '}
-        <a href="https://github.com/milind-soni/OpenMausBot/releases">Browse releases on GitHub</a>.
+        <a href="https://github.com/Ali120B/mybot/releases">Browse releases on GitHub</a>.
       </p>
     );
   }

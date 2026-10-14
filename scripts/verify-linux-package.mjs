@@ -75,8 +75,19 @@ function requireUpdaterTarget(resources, label) {
   const updateFile = path.join(resources, "app-update.yml");
   requireFile(updateFile);
   const update = readFileSync(updateFile, "utf8");
-  if (!/^owner: milind-soni$/m.test(update) || !/^repo: OpenMausBot$/m.test(update)) {
-    fail(`${label} app-update.yml does not point at milind-soni/OpenMausBot`);
+  // The updater must chase this repository's own releases; owner/repo come
+  // from package.json's repository (what electron-builder.yml publishes to).
+  const slug =
+    /^https:\/\/github\.com\/([^/]+\/[^/.]+?)(?:\.git)?$/.exec(
+      require(path.join(root, "package.json")).repository?.url ?? "",
+    )?.[1] ?? "";
+  if (!slug) fail("package.json repository.url is not a GitHub repository");
+  const [owner, repo] = slug.split("/");
+  if (
+    !new RegExp(`^owner: ${owner}$`, "m").test(update) ||
+    !new RegExp(`^repo: ${repo}$`, "m").test(update)
+  ) {
+    fail(`${label} app-update.yml does not point at ${slug}`);
   }
 }
 

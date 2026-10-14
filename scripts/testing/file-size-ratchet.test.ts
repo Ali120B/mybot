@@ -16,7 +16,7 @@ const LISTED_FROM = 1000;
 
 const LINES: Record<string, number> = {
   "server/index.ts": 22138,
-  "src/state/store.tsx": 4546,
+  "src/state/store.tsx": 4545,
   "electron/main.mjs": 4233,
   "server/store.ts": 3063,
   "src/components/Sidebar.tsx": 3023,
@@ -43,7 +43,7 @@ const LINES: Record<string, number> = {
   "src/components/ModelPicker.tsx": 1309,
   "src/components/PhoneSetupFlow.tsx": 1295,
   "server/cli.ts": 1221,
-  "src/components/SettingsModal.tsx": 1283,
+  "src/components/SettingsModal.tsx": 1275,
   "server/drivers/agents-call.ts": 1256,
   "src/components/ChatMarkdown.tsx": 1245,
   "src/components/PluginsPanel.tsx": 1225,
@@ -51,7 +51,7 @@ const LINES: Record<string, number> = {
   // the desktop's secure-address lifecycle (sign-in, on-demand tunnel,
   // give-back, watchdog) as one state machine; split it before it grows
   "electron/companion-account-service.mjs": 1125,
-  "src/components/TeamLibraryPanel.tsx": 1147,
+  "src/components/TeamLibraryPanel.tsx": 1135,
   "src/components/AttachmentPreview.tsx": 1082,
   "src/components/McpServersPanel.tsx": 1061,
   "server/drivers/openai-chat.ts": 1033,
